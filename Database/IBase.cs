@@ -7,7 +7,7 @@ namespace Database
     public interface IBase
     {
         //void CriarTabela();
-        void Salvar();
+        void Salvar(int acao);
         //void Excluir();
         //List<IBase> Todos();
         //List<IBase> Busca();

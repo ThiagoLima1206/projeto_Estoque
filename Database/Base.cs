@@ -38,7 +38,7 @@ namespace Database
         /// <summary>
         /// Método genérico para salvar no Banco de Dados 
         /// </summary>
-        public virtual void Salvar()
+        public virtual void Salvar(int acao)
         {
             ///<summary> Utiliza uma string contendo o endereço do servidor, o nome do banco e o acesso do SQL Server </summary>
             using (SqlConnection connection = new SqlConnection(ConnectionString))
@@ -68,8 +68,22 @@ namespace Database
 
                 string queryString = string.Empty;
 
-                ///<summary> Concatena a instrução de execução da procedure com os valores da lista </summary>
-                queryString = "EXEC uspGerir" + this.GetType().Name + "  1, " + string.Join(", ", valores.ToArray()) + ";";
+                /// <summary> Inserir </summary>
+                if (acao == 1)
+                {
+                    ///<summary> Concatena a instrução de execução da procedure com os valores da lista </summary>
+                    queryString = "EXEC uspGerir" + this.GetType().Name + "  1, " + string.Join(", ", valores.ToArray()) + ";";
+                }
+                /// <summary> Editar </summary>
+                else if (acao == 2)
+                {
+                    queryString = "EXEC uspGerir" + this.GetType().Name + "  2, " + string.Join(", ", valores.ToArray()) + ";";
+                }
+                /// <summary> Excluir </summary>
+                else if (acao == 3)
+                {
+                    queryString = "EXEC uspGerir" + this.GetType().Name + "  3, " + string.Join(", ", valores.ToArray()) + ";";
+                }
 
                 SqlCommand command = new SqlCommand(queryString, connection);
                 command.Connection.Open();

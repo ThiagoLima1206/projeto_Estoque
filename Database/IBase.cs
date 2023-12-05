@@ -8,8 +8,7 @@ namespace Database
     {
         //void CriarTabela();
         void Salvar(int acao);
-        //void Excluir();
-        //List<IBase> Todos();
+        List<IBase> Todos();
         //List<IBase> Busca();
     }
 }

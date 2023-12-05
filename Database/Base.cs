@@ -85,9 +85,43 @@ namespace Database
                     queryString = "EXEC uspGerir" + this.GetType().Name + "  3, " + string.Join(", ", valores.ToArray()) + ";";
                 }
 
+                ///<summary> Abre a conexão com banco e executa a query </summary>
                 SqlCommand command = new SqlCommand(queryString, connection);
                 command.Connection.Open();
                 command.ExecuteNonQuery();
+            }
+        }
+
+        public virtual List<IBase> Todos()
+        {
+            var list = new List<IBase>();
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                string queryString = "SELECT * FROM " + this.GetType().Name;
+                SqlCommand command = new SqlCommand(queryString, connection);
+                command.Connection.Open();
+
+                SqlDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    var obj = (IBase)Activator.CreateInstance(this.GetType());
+                    setProperty(ref obj, reader);
+                    list.Add(obj);
+                }
+            }
+
+            return list;
+        }
+
+        private void setProperty(ref IBase obj, SqlDataReader reader)
+        {
+            foreach (PropertyInfo pi in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                OpcoesBase pOpcoesBase = (OpcoesBase)pi.GetCustomAttribute(typeof(OpcoesBase));
+                if (pOpcoesBase != null && pOpcoesBase.UsarNoBancoDeDados)
+                {
+                    pi.SetValue(obj, reader[pi.Name].ToString());
+                }
             }
         }
     }

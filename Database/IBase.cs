@@ -6,7 +6,7 @@ namespace Database
 {
     public interface IBase
     {
-        int Key { get; }
+        string Key { get; }
         void CriarTabela();
         void Salvar();
         void Excluir();

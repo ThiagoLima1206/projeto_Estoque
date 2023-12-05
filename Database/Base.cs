@@ -11,7 +11,7 @@ namespace Database
     {
         private string ConnectionString = ConfigurationManager.AppSettings["SqlConnection"];
 
-        public int Key
+        public string Key
         {
             get
             {
@@ -30,11 +30,11 @@ namespace Database
                     /// </summary>
                     if (pOpcoesBase != null && pOpcoesBase.ChavePrimaria)
                     {
-                        return Convert.ToInt32(pi.GetValue(this));
+                        return pi.GetValue(this).ToString();
                     }
                 }
 
-                return 0;
+                return "normal";
             }
         }
 
@@ -64,51 +64,36 @@ namespace Database
 
         public virtual void Salvar()
         {
-            using(SqlConnection connection = new SqlConnection(ConnectionString))
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
-                List<string> campos = new List<string>();
                 List<string> valores = new List<string>();
 
                 foreach (PropertyInfo pi in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
                     OpcoesBase pOpcoesBase = (OpcoesBase)pi.GetCustomAttribute(typeof(OpcoesBase));
-                    if (pOpcoesBase != null && pOpcoesBase.UsarNoBancoDeDados && !pOpcoesBase.AutoIncrementar)
-                    {
-                        if (this.Key == 0)
-                        {
-                            if (!pOpcoesBase.ChavePrimaria)
-                            {
-                                campos.Add(pi.Name);
 
-                                if (pi.PropertyType.Name == "Double")
-                                {
-                                    valores.Add("'" + pi.GetValue(this).ToString().Replace(".", "").Replace(",", ".") + "'");
-                                }
-                                else
-                                {
-                                    valores.Add("'" + pi.GetValue(this) + "'");
-                                }
-                            }
+                    if (pOpcoesBase != null && pOpcoesBase.UsarNoBancoDeDados)
+                    {
+                        if (pi.PropertyType.Name == "Double")
+                        {
+                            valores.Add("'" + pi.GetValue(this).ToString().Replace(".", "").Replace(",", ".") + "'");
                         }
                         else
                         {
-                            if (!pOpcoesBase.ChavePrimaria)
-                            {
-                                valores.Add(" " + pi.Name + " = '" + pi.GetValue(this) + "'");
-                            }
+                            valores.Add("'" + pi.GetValue(this) + "'");
                         }
                     }
                 }
 
                 string queryString = string.Empty;
 
-                if (this.Key == 0)
+                if (this.Key == "normal")
                 {
-                    queryString = "INSERT INTO " + this.GetType().Name + " (" + string.Join(", ", campos.ToArray()) + ") VALUES (" + string.Join(", ", valores.ToArray()) + ");";
+                    queryString = "EXEC uspGerir" + this.GetType().Name + " ( 1, " + string.Join(", ", valores.ToArray()) + ");";
                 }
                 else
                 {
-                    queryString = "UPDATE " + this.GetType().Name + " SET " + string.Join(", ", valores.ToArray()) + " WHERE Id = " + this.Key + ";";
+                    queryString = "EXEC uspGerir" + this.GetType().Name + " ( 2, " + string.Join(", ", valores.ToArray()) + ");";
                 }
 
                 SqlCommand command = new SqlCommand(queryString, connection);

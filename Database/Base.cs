@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.SqlClient;
 using System.Reflection;
 using System.Text;
 
@@ -58,6 +59,61 @@ namespace Database
                     return "TINYINT";
                 default:
                     return "VARCHAR(255)";
+            }
+        }
+
+        public virtual void Salvar()
+        {
+            using(SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                List<string> campos = new List<string>();
+                List<string> valores = new List<string>();
+
+                foreach (PropertyInfo pi in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    OpcoesBase pOpcoesBase = (OpcoesBase)pi.GetCustomAttribute(typeof(OpcoesBase));
+                    if (pOpcoesBase != null && pOpcoesBase.UsarNoBancoDeDados && !pOpcoesBase.AutoIncrementar)
+                    {
+                        if (this.Key == 0)
+                        {
+                            if (!pOpcoesBase.ChavePrimaria)
+                            {
+                                campos.Add(pi.Name);
+
+                                if (pi.PropertyType.Name == "Double")
+                                {
+                                    valores.Add("'" + pi.GetValue(this).ToString().Replace(".", "").Replace(",", ".") + "'");
+                                }
+                                else
+                                {
+                                    valores.Add("'" + pi.GetValue(this) + "'");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!pOpcoesBase.ChavePrimaria)
+                            {
+                                valores.Add(" " + pi.Name + " = '" + pi.GetValue(this) + "'");
+                            }
+                        }
+                    }
+                }
+
+                string queryString = string.Empty;
+
+                if (this.Key == 0)
+                {
+                    queryString = "INSERT INTO " + this.GetType().Name + " (" + string.Join(", ", campos.ToArray()) + ") VALUES (" + string.Join(", ", valores.ToArray()) + ");";
+                }
+                else
+                {
+                    queryString = "UPDATE " + this.GetType().Name + " SET " + string.Join(", ", valores.ToArray()) + " WHERE Id = " + this.Key + ";";
+                }
+
+                SqlCommand command = new SqlCommand(queryString, connection);
+                command.Connection.Open();
+                command.ExecuteNonQuery();
             }
         }
     }

@@ -10,7 +10,6 @@ namespace Database
         void CriarTabela();
         void Salvar();
         void Excluir();
-        void Editar();
         List<IBase> Todos();
         List<IBase> Busca();
     }

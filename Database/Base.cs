@@ -11,33 +11,6 @@ namespace Database
     {
         private string ConnectionString = ConfigurationManager.AppSettings["SqlConnection"];
 
-        public string Key
-        {
-            get
-            {
-                /// <summary>
-                /// Retorna todas as propriedades públicas de instância do objeto atual 
-                /// </summary>
-                foreach (PropertyInfo pi in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                {
-                    /// <summary>
-                    /// Recupera um atributo personalizado de um tipo especificado
-                    /// </summary>
-                    OpcoesBase pOpcoesBase = (OpcoesBase)pi.GetCustomAttribute(typeof(OpcoesBase));
-
-                    /// <summary>
-                    /// Verifica se o objeto possui atributos e retorna sua Chave Primária
-                    /// </summary>
-                    if (pOpcoesBase != null && pOpcoesBase.ChavePrimaria)
-                    {
-                        return pi.GetValue(this).ToString();
-                    }
-                }
-
-                return "normal";
-            }
-        }
-
         /// <summary>
         /// Faz uma espécie de conversão de string pegando os tipos do C# e transformando e tipos SQL
         /// </summary>
@@ -62,24 +35,32 @@ namespace Database
             }
         }
 
+        /// <summary>
+        /// Método genérico para salvar no Banco de Dados 
+        /// </summary>
         public virtual void Salvar()
         {
+            ///<summary> Utiliza uma string contendo o endereço do servidor, o nome do banco e o acesso do SQL Server </summary>
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 List<string> valores = new List<string>();
 
+                ///<summary> Retorna o atributo da classe </summary>
                 foreach (PropertyInfo pi in this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
+                    ///<summary> Retorna as propriedades do atributo </summary>
                     OpcoesBase pOpcoesBase = (OpcoesBase)pi.GetCustomAttribute(typeof(OpcoesBase));
 
                     if (pOpcoesBase != null && pOpcoesBase.UsarNoBancoDeDados)
                     {
+                        ///<summary> Se for Double troca-se as vírgulas por pontos e retira-se os pontos marcadores de casas </summary>
                         if (pi.PropertyType.Name == "Double")
                         {
                             valores.Add("'" + pi.GetValue(this).ToString().Replace(".", "").Replace(",", ".") + "'");
                         }
                         else
                         {
+                            ///<summary> Pega o valor que foi inserido no atributo do objeto e o armazena em uma lista </summary>
                             valores.Add("'" + pi.GetValue(this) + "'");
                         }
                     }
@@ -87,14 +68,8 @@ namespace Database
 
                 string queryString = string.Empty;
 
-                if (this.Key == "normal")
-                {
-                    queryString = "EXEC uspGerir" + this.GetType().Name + " ( 1, " + string.Join(", ", valores.ToArray()) + ");";
-                }
-                else
-                {
-                    queryString = "EXEC uspGerir" + this.GetType().Name + " ( 2, " + string.Join(", ", valores.ToArray()) + ");";
-                }
+                ///<summary> Concatena a instrução de execução da procedure com os valores da lista </summary>
+                queryString = "EXEC uspGerir" + this.GetType().Name + "  1, " + string.Join(", ", valores.ToArray()) + ";";
 
                 SqlCommand command = new SqlCommand(queryString, connection);
                 command.Connection.Open();

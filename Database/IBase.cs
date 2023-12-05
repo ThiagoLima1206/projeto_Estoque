@@ -6,11 +6,10 @@ namespace Database
 {
     public interface IBase
     {
-        string Key { get; }
-        void CriarTabela();
+        //void CriarTabela();
         void Salvar();
-        void Excluir();
-        List<IBase> Todos();
-        List<IBase> Busca();
+        //void Excluir();
+        //List<IBase> Todos();
+        //List<IBase> Busca();
     }
 }

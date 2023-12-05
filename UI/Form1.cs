@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Business;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -20,6 +21,16 @@ namespace UI
         private void Form1_Load(object sender, EventArgs e)
         {
             
+        }
+
+        private void btnSalvar_Click(object sender, EventArgs e)
+        {
+            var produto = new Produto();
+            produto.IdProd = txtId.Text;
+            produto.Nome = txtNome.Text;
+            produto.Descricao = txtDescricao.Text;
+            produto.Salvar();
+            MessageBox.Show("Produto cadastrado com sucesso!");
         }
     }
 }
